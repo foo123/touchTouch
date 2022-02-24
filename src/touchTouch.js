@@ -106,7 +106,7 @@ function setup()
         slider.id = 'gallerySlider';
         prevArrow.id = 'prevArrow';
         nextArrow.id = 'nextArrow';
-        if ('ontouchstart' in window) addClass(slider, 'is-touch-screen');
+        if ('ontouchstart' in window) addClass(overlay, 'is-touch-screen');
         document.body.appendChild(hide(overlay));
         overlay.appendChild(slider);
         overlay.appendChild(prevArrow);
