@@ -20,30 +20,34 @@
 #galleryOverlay.visible {
     opacity: 1;
 }
-#gallerySlider {
+.gallery-slider {
     position: absolute;
+    display: block;
     width: 100%;
     height: 100%;
     margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 0;
     top: 0;
     left: 0;
-    font-size: 0;
+    z-index: 1;
     white-space: nowrap;
     -moz-transition: left 0.4s ease;
     -webkit-transition: left 0.4s ease;
     transition: left 0.4s ease;
 }
-#gallerySlider.rightSpring {
+.gallery-slider.rightSpring {
     -moz-animation: rightSpring 0.3s;
     -webkit-animation: rightSpring 0.3s;
     animation: rightSpring 0.3s;
 }
-#gallerySlider.leftSpring {
+.gallery-slider.leftSpring {
     -moz-animation: leftSpring 0.3s;
     -webkit-animation: leftSpring 0.3s;
     animation: leftSpring 0.3s;
 }
-#gallerySlider .placeholder {
+.gallery-slider .placeholder {
     width: 100%;
     height: 100%;
     display: inline-block;
@@ -55,7 +59,7 @@
 }
 /* The before element moves the
 * image halfway from the top */
-#gallerySlider .placeholder:before {
+.gallery-slider .placeholder:before {
     position: relative;
     display: inline-block;
     content: "";
@@ -66,14 +70,15 @@
     margin: 0;
     margin-right: -1px;
 }
-#gallerySlider .placeholder img {
+.gallery-slider .placeholder img {
     display: inline-block;
     vertical-align: middle;
     width: auto;
     height: auto;
 }
 /* Arrows */
-#prevArrow, #nextArrow {
+#galleryOverlay .prev-arrow,
+#galleryOverlay .next-arrow {
     border: none;
     text-decoration: none;
     background: transparent url('./arrows.png') no-repeat;
@@ -83,21 +88,23 @@
     width: 43px;
     height: 58px;
     top: 50%;
+    z-index: 2;
     margin-top: -29px;
     -moz-transition: opacity 0.2s ease;
     -webkit-transition: opacity 0.2s ease;
     transition: opacity 0.2s ease;
 }
-#prevArrow:hover, #nextArrow:hover {
+#galleryOverlay .prev-arrow:hover,
+#galleryOverlay .next-arrow:hover {
     opacity: 1;
 }
-#prevArrow {
+#galleryOverlay .prev-arrow {
     height: 80px;
     border: 3px solid white;
     background-position: left top;
     left: 10%;
 }
-#nextArrow{
+#galleryOverlay .next-arrow {
     height: 80px;
     border: 3px solid white;
     background-position: right top;
@@ -128,32 +135,34 @@
 
 @media (max-width: 1080px) {
 /* hide arrows if small enough touchscreen */
-#galleryOverlay.is-touch-screen #prevArrow,
-#galleryOverlay.is-touch-screen #nextArrow {
+#galleryOverlay.is-touch-screen .prev-arrow,
+#galleryOverlay.is-touch-screen .next-arrow {
     display: none !important;
 }
 }
 @media (orientation: landscape) {
-#gallerySlider .placeholder img {
+.gallery-slider .placeholder img {
+    max-width: none;
     max-height: 100%;
 }
 }
 @media (orientation: portrait) {
-#gallerySlider .placeholder img {
+.gallery-slider .placeholder img {
+    max-height: none;
     max-width: 100%;
 }
 }
-@media (max-width: 360px) {
-#gallerySlider .placeholder img,
-#gallerySlider .placeholder img {
+/*@media (max-width: 360px) {
+.gallery-slider .placeholder img,
+.gallery-slider .placeholder img {
     max-height: none;
     max-width: 100%;
 }
 }
 @media (max-height: 360px) {
-#gallerySlider .placeholder img,
-#gallerySlider .placeholder img {
+.gallery-slider .placeholder img,
+.gallery-slider .placeholder img {
     max-width: none;
     max-height: 100%;
 }
-}
+}*/

@@ -20,7 +20,7 @@ h1 {
     text-align: center;
     margin: 40px auto 20px auto;
 }
-#photos {
+.photos {
     position: relative;
     display: block;
     box-sizing: border-box;
@@ -54,7 +54,7 @@ h1 {
 
 <h1>Vanilla touchTouch Demo</h1>
 
-<div id="photos">
+<div id="gallery1" class="photos">
     <a class="magnifier" href="./imgs/1.jpg"><img src="./imgs/thumbs/1.jpg" /></a>
     <a class="magnifier" href="./imgs/2.jpg"><img src="./imgs/thumbs/2.jpg" /></a>
     <a class="magnifier" href="./imgs/3.jpg"><img src="./imgs/thumbs/3.jpg" /></a>
@@ -63,9 +63,20 @@ h1 {
     <a class="magnifier" href="./imgs/6.jpg"><img src="./imgs/thumbs/6.jpg" /></a>
 </div>
 
+<hr />
+
+<div id="gallery2" class="photos">
+    <a class="magnifier" href="./imgs/1.jpg"><img src="./imgs/thumbs/1.jpg" /></a>
+    <a class="magnifier" href="./imgs/2.jpg"><img src="./imgs/thumbs/2.jpg" /></a>
+    <a class="magnifier" href="./imgs/4.jpg"><img src="./imgs/thumbs/4.jpg" /></a>
+    <a class="magnifier" href="./imgs/3.jpg"><img src="./imgs/thumbs/3.jpg" /></a>
+</div>
+
 <script src="../src/touchTouch.js"></script>
 <script>
-touchTouch(document.body.querySelectorAll('.magnifier'));
+// multiple instances
+touchTouch(document.getElementById('gallery1').querySelectorAll('.magnifier'));
+touchTouch(document.getElementById('gallery2').querySelectorAll('.magnifier'));
 </script>
 </body>
 </html>
