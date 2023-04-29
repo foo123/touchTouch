@@ -231,19 +231,19 @@ function touchTouch(items, options)
                 e.preventDefault && e.preventDefault();
                 var diff = (isTouch ? e.touches[0].pageX : e.pageX) - startX;
 
-                slider.style.marginLeft = String(diff) + 'px';
-                if (diff > 60)
+                //slider.style.marginLeft = String(diff) + 'px';
+                if (diff > 20)
                 {
                     if (sliderTouchMove) removeEvent(slider, sliderTouchMove.event, sliderTouchMove, {passive:false, capture:false});
                     sliderTouchMove = null;
-                    slider.style.removeProperty('margin-left');
+                    //slider.style.removeProperty('margin-left');
                     self.showPrevious();
                 }
-                else if (diff < -60)
+                else if (diff < -20)
                 {
                     if (sliderTouchMove) removeEvent(slider, sliderTouchMove.event, sliderTouchMove, {passive:false, capture:false});
                     sliderTouchMove = null;
-                    slider.style.removeProperty('margin-left');
+                    //slider.style.removeProperty('margin-left');
                     self.showNext();
                 }
             }, {passive:false, capture:false});
