@@ -55,7 +55,10 @@
     overflow: visible;
     line-height: 1px;
     text-align: center;
-    background: transparent url(./loader.gif) no-repeat center center;
+    background-color: transparent;
+    background-image: url(./486.gif);
+    background-repeat: no-repeat;
+    background-position: center center;
 }
 /* The before element moves the
 * image halfway from the top */
@@ -113,24 +116,24 @@
 
 /* Safari and Chrome Keyframe Animations */
 @-webkit-keyframes rightSpring {
-    0% {		margin-left: 0px;}
-    50% {	margin-left: -30px;}
-    100% {	margin-left: 0px;}
+    0% {        margin-left: 0px;}
+    50% {   margin-left: -30px;}
+    100% {  margin-left: 0px;}
 }
 @-webkit-keyframes leftSpring {
-    0% {		margin-left: 0px;}
-    50% {	margin-left: 30px;}
-    100% {	margin-left: 0px;}
+    0% {        margin-left: 0px;}
+    50% {   margin-left: 30px;}
+    100% {  margin-left: 0px;}
 }
 @keyframes rightSpring {
-    0% {		margin-left: 0px;}
-    50% {	margin-left: -30px;}
-    100% {	margin-left: 0px;}
+    0% {        margin-left: 0px;}
+    50% {   margin-left: -30px;}
+    100% {  margin-left: 0px;}
 }
 @keyframes leftSpring {
-    0% {		margin-left: 0px;}
-    50% {	margin-left: 30px;}
-    100% {	margin-left: 0px;}
+    0% {        margin-left: 0px;}
+    50% {   margin-left: 30px;}
+    100% {  margin-left: 0px;}
 }
 
 @media (max-width: 1080px) {

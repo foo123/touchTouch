@@ -1,7 +1,7 @@
 /**
 *  touchTouch.js
 *  Vanilla JavaScript version of https://github.com/tutorialzine/touchTouch Optimized Mobile Gallery by Martin Angelov
-*  @VERSION: 1.2.0
+*  @VERSION: 1.3.0
 *  @license: MIT License
 *
 *  https://github.com/foo123/touchTouch
@@ -117,7 +117,7 @@ function showOverlay(instance)
     // Show the overlay
     show(overlay);
     // Trigger the opacity CSS transition
-    setTimeout(function() {addClass(overlay, 'visible');}, 100);
+    setTimeout(function() {addClass(overlay, 'visible');}, 0);
 }
 function hideOverlay()
 {
@@ -139,6 +139,22 @@ function loadImage(src, callback)
     });
     img.src = src;
 }
+function fit(img, scale)
+{
+    if (!img || ('img' !== (img.tagName||'').toLowerCase())) return;
+    var w = img.width, h = img.height,
+        ww = scale*window.innerWidth, wh = scale*window.innerHeight;
+    if (h * ww / w > wh)
+    {
+        img.style.height = String(wh) + 'px';
+        img.style.width = 'auto';
+    }
+    else
+    {
+        img.style.width = String(ww) + 'px';
+        img.style.height = 'auto';
+    }
+}
 
 /* Creating the plugin */
 function touchTouch(items, options)
@@ -151,7 +167,7 @@ function touchTouch(items, options)
     var slider, prevArrow, nextArrow,
         placeholders, index = 0,
         itemClick, sliderClick, prevArrowClick, nextArrowClick,
-        sliderTouchStart, sliderTouchMove, sliderTouchEnd;
+        sliderTouchStart, sliderTouchMove = null, sliderTouchEnd, onResize;
 
     options = options || {};
     setup();
@@ -204,23 +220,29 @@ function touchTouch(items, options)
             || !closest(e.target, slider.id)
         ) return false;
 
-        var touch = e, startX = touch.changedTouches[0].pageX;
 
-        addEvent(slider, 'touchmove', sliderTouchMove = function sliderTouchMove(e) {
-            e.preventDefault && e.preventDefault();
-            touch = e.touches[0] || e.changedTouches[0];
+        // allow complex gestures like resize
+        if (1 === e.touches.length)
+        {
+            var touch = e.touches[0], startX = touch.pageX;
+            addEvent(slider, 'touchmove', sliderTouchMove = function sliderTouchMove(e) {
+                e.preventDefault && e.preventDefault();
+                touch = e.touches[0];
 
-            if (touch.pageX - startX > 10)
-            {
-                removeEvent(slider, 'touchmove', sliderTouchMove, {passive:false, capture:false});
-                self.showPrevious();
-            }
-            else if (touch.pageX - startX < -10)
-            {
-                removeEvent(slider, 'touchmove', sliderTouchMove, {passive:false, capture:false});
-                self.showNext();
-            }
-        }, {passive:false, capture:false});
+                if (touch.pageX - startX > 10)
+                {
+                    removeEvent(slider, 'touchmove', sliderTouchMove, {passive:false, capture:false});
+                    sliderTouchMove = null;
+                    self.showPrevious();
+                }
+                else if (touch.pageX - startX < -10)
+                {
+                    removeEvent(slider, 'touchmove', sliderTouchMove, {passive:false, capture:false});
+                    sliderTouchMove = null;
+                    self.showNext();
+                }
+            }, {passive:false, capture:false});
+        }
         // Return false to prevent image
         // highlighting on Android
         return false;
@@ -228,6 +250,7 @@ function touchTouch(items, options)
 
     addEvent(slider, 'touchend', sliderTouchEnd = function() {
         if (sliderTouchMove) removeEvent(slider, 'touchmove', sliderTouchMove, {passive:false, capture:false});
+        sliderTouchMove = null;
     }, {passive:true, capture:false});
 
     // Listening for clicks on the thumbnails
@@ -284,6 +307,18 @@ function touchTouch(items, options)
         if (!placeholders[index].children.length)
         {
             loadImage(items[index].href, function() {
+                if (options.fit)
+                {
+                    fit(this, options.fit);
+                    if (!onResize)
+                    {
+                        addEvent(window, 'resize', onResize = function(e) {
+                            placeholders.forEach(function(p) {
+                                fit(p.children[0], options.fit);
+                            });
+                        }, {passive:true, capture:false});
+                    }
+                }
                 placeholders[index].textContent = '';
                 placeholders[index].appendChild(this);
             });
@@ -328,6 +363,7 @@ function touchTouch(items, options)
         if (slider)
         {
             if (activeInstance === self) hideOverlay();
+            if (onResize) removeEvent(window, 'resize', onResize, {passive:true, capture:false});
             if (sliderTouchMove) removeEvent(slider, 'touchmove', sliderTouchMove, {passive:false, capture:false});
             removeEvent(slider, 'touchstart', sliderTouchStart, {passive:true, capture:false});
             removeEvent(slider, 'touchend', sliderTouchEnd, {passive:true, capture:false});
@@ -357,7 +393,7 @@ function touchTouch(items, options)
         }
     };
 }
-touchTouch.VERSION = '1.2.0';
+touchTouch.VERSION = '1.3.0';
 touchTouch.prototype = {
     constructor: touchTouch,
     dispose: null,
