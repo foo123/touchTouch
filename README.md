@@ -3,7 +3,7 @@
 
 Vanilla JavaScript version of [touchTouch Optimized Mobile Gallery](https://github.com/tutorialzine/touchTouch) by Martin Angelov
 
-version 1.3.0
+**version: 1.3.0**
 
 MIT License
 

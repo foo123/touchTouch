@@ -10,7 +10,8 @@
 (function() {
 "use strict";
 
-var eventOptionsSupported = null,
+var stdMath = Math,
+    eventOptionsSupported = null,
     trim_re = /^\s+|\s+$/g,
     trim = String.prototype.trim
         ? function(s) {return s.trim();}
@@ -93,8 +94,7 @@ function setup()
         // Appending the markup to the page
         overlay = document.createElement('div');
         overlay.id = 'galleryOverlay';
-        if ('ontouchstart' in window)
-            addClass(overlay, 'is-touch-screen');
+        if ('ontouchstart' in window) addClass(overlay, 'is-touch-screen');
         document.body.appendChild(hide(overlay));
         // listen for esc/left/right keys
         addEvent(window, 'keydown', function(e) {
@@ -117,7 +117,7 @@ function showOverlay(instance)
     // Show the overlay
     show(overlay);
     // Trigger the opacity CSS transition
-    setTimeout(function() {addClass(overlay, 'visible');}, 0);
+    setTimeout(function() {addClass(overlay, 'visible');}, 100);
 }
 function hideOverlay()
 {
@@ -142,8 +142,10 @@ function loadImage(src, callback)
 function fit(img, scale)
 {
     if (!img || ('img' !== (img.tagName||'').toLowerCase())) return;
-    var w = img.width, h = img.height,
-        ww = scale*window.innerWidth, wh = scale*window.innerHeight;
+    var w = img.width,
+        h = img.height,
+        ww = scale*(window.innerWidth || document.documentElement.clientWidth),
+        wh = scale*(window.innerHeight || document.documentElement.clientHeight);
     if (h * ww / w > wh)
     {
         img.style.height = String(wh) + 'px';
@@ -165,25 +167,24 @@ function touchTouch(items, options)
 
     /* Private variables */
     var slider, prevArrow, nextArrow,
-        placeholders, index = 0,
+        placeholders, index = 0, auto = false, dofit = 0,
         itemClick, sliderClick, prevArrowClick, nextArrowClick,
         sliderTouchStart, sliderTouchMove = null, sliderTouchEnd, onResize;
 
     options = options || {};
+    auto = !!options.auto;
+    dofit = options.fit;
     setup();
     slider = document.createElement('div');
     prevArrow = document.createElement('a');
     nextArrow = document.createElement('a');
     slider.id = 'gallerySlider' + String(++id);
     addClass(slider, 'gallery-slider');
-    if (options.slider)
-        addClass(slider, options.slider);
+    if (options.slider) addClass(slider, options.slider);
     addClass(prevArrow, 'prev-arrow');
-    if (options.prevArrow)
-        addClass(prevArrow, options.prevArrow);
+    if (options.prevArrow) addClass(prevArrow, options.prevArrow);
     addClass(nextArrow, 'next-arrow');
-    if (options.nextArrow)
-        addClass(nextArrow, options.nextArrow);
+    if (options.nextArrow) addClass(nextArrow, options.nextArrow);
 
     items = Array.prototype.slice.call(items || []);
 
@@ -196,12 +197,6 @@ function touchTouch(items, options)
         return placeholder;
     });
 
-    // Hide the gallery if the background is touched / clicked
-    addEvent(slider, 'click', sliderClick = function(e) {
-        if (('img' !== e.target.tagName.toLowerCase()))
-            hideOverlay();
-    }, {passive:true, capture:false});
-
     // listen for prev/next clicks
     addEvent(prevArrow, 'click', prevArrowClick = function(e) {
         e.preventDefault && e.preventDefault();
@@ -212,59 +207,82 @@ function touchTouch(items, options)
         self.showNext();
     }, {passive:false, capture:false});
 
-    // Listen for touch events on the body and check if they
+    // Listen for touch/mouse events on the body and check if they
     // originated in #gallerySlider img - the images in the slider.
     addEvent(slider, 'touchstart', sliderTouchStart = function(e) {
         if (
-            'img' !== e.target.tagName.toLowerCase()
-            || !closest(e.target, slider.id)
-        ) return false;
+            'img' !== e.target.tagName.toLowerCase() && prevArrow !== e.target && nextArrow !== e.target
+            /*|| !closest(e.target, slider.id)*/
+        )
+        {
+            // Hide the gallery if the background is touched / clicked
+            setTimeout(hideOverlay, 100);
+            return false;
+        }
 
 
         // allow complex gestures like resize
-        if (1 === e.touches.length)
+        var isTouch = e.touches && e.touches.length, startX;
+        if (!isTouch || (1 === e.touches.length))
         {
-            var touch = e.touches[0], startX = touch.pageX;
-            addEvent(slider, 'touchmove', sliderTouchMove = function sliderTouchMove(e) {
+            e.preventDefault && e.preventDefault();
+            startX = isTouch ? e.touches[0].pageX : e.pageX;
+            addEvent(slider, isTouch ? 'touchmove' : 'mousemove', sliderTouchMove = function(e) {
                 e.preventDefault && e.preventDefault();
-                touch = e.touches[0];
+                var diff = (isTouch ? e.touches[0].pageX : e.pageX) - startX;
 
-                if (touch.pageX - startX > 10)
+                slider.style.marginLeft = String(diff) + 'px';
+                if (diff > 60)
                 {
-                    removeEvent(slider, 'touchmove', sliderTouchMove, {passive:false, capture:false});
+                    if (sliderTouchMove) removeEvent(slider, sliderTouchMove.event, sliderTouchMove, {passive:false, capture:false});
                     sliderTouchMove = null;
+                    slider.style.removeProperty('margin-left');
                     self.showPrevious();
                 }
-                else if (touch.pageX - startX < -10)
+                else if (diff < -60)
                 {
-                    removeEvent(slider, 'touchmove', sliderTouchMove, {passive:false, capture:false});
+                    if (sliderTouchMove) removeEvent(slider, sliderTouchMove.event, sliderTouchMove, {passive:false, capture:false});
                     sliderTouchMove = null;
+                    slider.style.removeProperty('margin-left');
                     self.showNext();
                 }
             }, {passive:false, capture:false});
+            sliderTouchMove.event = isTouch ? 'touchmove' : 'mousemove';
         }
         // Return false to prevent image
         // highlighting on Android
         return false;
-    }, {passive:true, capture:false});
-
+    }, {passive:false, capture:false});
     addEvent(slider, 'touchend', sliderTouchEnd = function() {
-        if (sliderTouchMove) removeEvent(slider, 'touchmove', sliderTouchMove, {passive:false, capture:false});
+        if (sliderTouchMove) removeEvent(slider, sliderTouchMove.event, sliderTouchMove, {passive:false, capture:false});
         sliderTouchMove = null;
     }, {passive:true, capture:false});
+    addEvent(slider, 'touchcancel', sliderTouchEnd, {passive:true, capture:false});
 
-    // Listening for clicks on the thumbnails
-    itemClick = items.map(function(item, i) {
-        var click;
-        addEvent(item, 'click', click = function(e) {
-            e.preventDefault && e.preventDefault();
-            // Find the position of this image
-            // in the collection
-            index = i;
-            self.showGallery();
-        }, {passive:false, capture:false});
-        return click;
-    });
+    addEvent(slider, 'mousedown', sliderTouchStart, {passive:false, capture:false});
+    addEvent(slider, 'mouseup', sliderTouchEnd, {passive:true, capture:false});
+
+    // Hide the gallery if the background is touched / clicked
+    /*addEvent(slider, 'click', sliderClick = function(e) {
+        if (('img' !== e.target.tagName.toLowerCase()))
+            hideOverlay();
+    }, {passive:true, capture:false});*/
+
+    if (!auto)
+    {
+        // Listening for clicks on the thumbnails
+        itemClick = items.map(function(item, i) {
+            var click;
+            addEvent(item, 'click', click = function(e) {
+                e.preventDefault && e.preventDefault();
+                // Find the position of this image
+                // in the collection
+                index = i;
+                self.showGallery();
+            }, {passive:false, capture:false});
+            return click;
+        });
+    }
 
     self.showGallery = function showGallery() {
         if (activeInstance !== self)
@@ -275,6 +293,7 @@ function touchTouch(items, options)
             overlay.appendChild(prevArrow);
             overlay.appendChild(nextArrow);
             // Move the slider to the correct image
+            if (auto) index = 0;
             offsetSlider(index);
             showOverlay(self);
             showImage(index);
@@ -307,15 +326,13 @@ function touchTouch(items, options)
         if (!placeholders[index].children.length)
         {
             loadImage(items[index].href, function() {
-                if (options.fit)
+                if (dofit)
                 {
-                    fit(this, options.fit);
+                    fit(this, dofit);
                     if (!onResize)
                     {
-                        addEvent(window, 'resize', onResize = function(e) {
-                            placeholders.forEach(function(p) {
-                                fit(p.children[0], options.fit);
-                            });
+                        addEvent(window, 'resize', onResize = function() {
+                            placeholders.forEach(function(p) {fit(p.children[0], dofit);});
                         }, {passive:true, capture:false});
                     }
                 }
@@ -330,7 +347,7 @@ function touchTouch(items, options)
         // If this is not the last image
         if (index + 1 < items.length)
         {
-            index++;
+            ++index;
             offsetSlider(index);
             preload(index + 1);
         }
@@ -347,7 +364,7 @@ function touchTouch(items, options)
         // If this is not the first image
         if (index > 0)
         {
-            index--;
+            --index;
             offsetSlider(index);
             preload(index - 1);
         }
@@ -364,15 +381,16 @@ function touchTouch(items, options)
         {
             if (activeInstance === self) hideOverlay();
             if (onResize) removeEvent(window, 'resize', onResize, {passive:true, capture:false});
-            if (sliderTouchMove) removeEvent(slider, 'touchmove', sliderTouchMove, {passive:false, capture:false});
-            removeEvent(slider, 'touchstart', sliderTouchStart, {passive:true, capture:false});
+            if (sliderTouchMove) removeEvent(slider, sliderTouchMove.event, sliderTouchMove, {passive:false, capture:false});
+            removeEvent(slider, 'touchstart', sliderTouchStart, {passive:false, capture:false});
             removeEvent(slider, 'touchend', sliderTouchEnd, {passive:true, capture:false});
-            removeEvent(slider, 'click', sliderClick, {passive:true, capture:false});
+            removeEvent(slider, 'touchcancel', sliderTouchEnd, {passive:true, capture:false});
+            removeEvent(slider, 'mousedown', sliderTouchStart, {passive:false, capture:false});
+            removeEvent(slider, 'mouseup', sliderTouchEnd, {passive:true, capture:false});
+            //removeEvent(slider, 'click', sliderClick, {passive:true, capture:false});
             removeEvent(prevArrow, 'click', prevArrowClick, {passive:false, capture:false});
             removeEvent(nextArrow, 'click', nextArrowClick, {passive:false, capture:false});
-            items.forEach(function(item, i){
-                removeEvent(item, 'click', itemClick[i], {passive:false, capture:false});
-            });
+            if (!auto) items.forEach(function(item, i) {removeEvent(item, 'click', itemClick[i], {passive:false, capture:false});});
             slider.textContent = '';
             slider = null;
             prevArrow = null;
@@ -380,6 +398,7 @@ function touchTouch(items, options)
             placeholders = null;
             items = null;
             itemClick = null;
+            onResize = null;
             sliderTouchMove = null;
             sliderTouchStart = null;
             sliderTouchEnd = null;
