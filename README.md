@@ -1,11 +1,18 @@
 # touchTouch
 
+Enhanced Vanilla JavaScript version of [touchTouch Optimized Mobile Gallery](https://github.com/tutorialzine/touchTouch) by Martin Angelov
 
-Vanilla JavaScript version of [touchTouch Optimized Mobile Gallery](https://github.com/tutorialzine/touchTouch) by Martin Angelov
+**version: 1.4.0** (7.9 kB minified)
 
-**version: 1.3.0**
+**MIT License**
 
-MIT License
+**Supported Actions:**
+
+* Keyboard Navigation: ESC (close), LEFT (prev image), RIGHT (next image)
+* Mouse Navigation: CLICK BACKGROUND (close), CLICK LEFT ARROW (prev image), CLICK RIGHT ARROW (next image), SWIPE RIGHT (prev image), SWIPE LEFT (next image)
+* Touch Navigation: TAP BACKGROUND (close), SWIPE RIGHT (prev image), SWIPE LEFT (next image)
+* Mouse Gestures: WHEEL + CTRL (scale up/down image), CTRL + MOVE (move scaled image)
+* Touch Gestures: TWO-FINGER PINCH (scale up/down image), TWO-FINGER MOVE (move scaled image)
 
 
 **see also:**

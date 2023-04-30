@@ -48,6 +48,15 @@ h1 {
 .button:hover {
     border: 1px solid #777;
 }
+ul {
+    position: relative;
+    display: block;
+    margin: 20px auto;
+    text-align: left;
+    font-size: 18px;
+    line-height: 26px;
+    width: 80%;
+}
 .magnifier {
     position: relative;
     box-sizing: border-box;
@@ -69,6 +78,15 @@ h1 {
 <span id="forkongithub"><a href="https://github.com/foo123/touchTouch">Fork me on GitHub</a></span>
 
 <h1>Vanilla touchTouch Demo</h1>
+
+<ul>
+<li><b>Supported Actions:</b></li>
+<li>Keyboard Navigation: ESC (close), LEFT (prev image), RIGHT (next image)</li>
+<li>Mouse Navigation: CLICK BACKGROUND (close), CLICK LEFT ARROW (prev image), CLICK RIGHT ARROW (next image), SWIPE RIGHT (prev image), SWIPE LEFT (next image)</li>
+<li>Touch Navigation: TAP BACKGROUND (close), SWIPE RIGHT (prev image), SWIPE LEFT (next image)</li>
+<li>Mouse Gestures: WHEEL + CTRL (scale up/down image), CTRL + MOVE (move scaled image)</li>
+<li>Touch Gestures: TWO-FINGER PINCH (scale up/down image), TWO-FINGER MOVE (move scaled image)</li>
+</ul>
 
 <div id="gallery1" class="photos">
     <a class="magnifier" href="./imgs/1.jpg"><img src="./imgs/thumbs/1.jpg" /></a>

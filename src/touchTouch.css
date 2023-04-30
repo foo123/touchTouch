@@ -60,6 +60,9 @@
     background-repeat: no-repeat;
     background-position: center center;
 }
+.gallery-slider .placeholder.loaded {
+    background-image: none;
+}
 /* The before element moves the
 * image halfway from the top */
 .gallery-slider .placeholder:before {
