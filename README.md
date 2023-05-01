@@ -2,7 +2,7 @@
 
 Enhanced Vanilla JavaScript version of [touchTouch Optimized Mobile Gallery](https://github.com/tutorialzine/touchTouch) by Martin Angelov
 
-**version: 1.5.0** (8 kB minified)
+**version: 1.5.0** (9 kB minified)
 
 
 **MIT License**
@@ -31,6 +31,8 @@ slideshow.dispose(); // dispose the slideshow instance
 * `slider` custom css class for gallery slider
 * `prevArrow` custom css class for previous button
 * `nextArrow` custom css class for next button
+* `showCaption` boolean flag to show image numbering (**default** `false`)
+* `caption` custom css class for caption
 * `swipe` duration in `ms` for swipe animation (**default** `400`)
 * `fit` scale factor in `[0, 1]` (relative to viewport dimensions) to fit image dimensions to current viewport (**default** `0` disabled)
 * `auto` boolean flag indicating that passed images are the hrefs of the gallery images themselves, instead of clickable elements (**default** `false`)
@@ -41,6 +43,7 @@ slideshow.dispose(); // dispose the slideshow instance
 * **Keyboard Navigation**: ESC (close), LEFT (previous image), RIGHT (next image)
 * **Mouse Navigation**: CLICK BACKGROUND (close), CLICK LEFT ARROW (previous image), CLICK RIGHT ARROW (next image), SWIPE RIGHT (previous image), SWIPE LEFT (next image)
 * **Touch Navigation**: TAP BACKGROUND (close), SWIPE RIGHT (previous image), SWIPE LEFT (next image)
+* **Keyboard Gestures**: UP/DOWN (scale up/down image), CTRL/META + UP/DOWN/LEFT/RIGHT (move scaled image)
 * **Mouse Gestures**: CTRL/META + WHEEL (scale up/down image), CTRL/META + MOVE (move scaled image)
 * **Touch Gestures**: TWO-FINGER PINCH (scale up/down image), TWO-FINGER MOVE (move scaled image)
 

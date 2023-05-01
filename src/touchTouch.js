@@ -108,15 +108,6 @@ function show(el)
 /* Global private variables */
 var activeInstance = null, overlay = null, overlayVisible = false, id = 0;
 
-function keyListener(e)
-{
-    if (activeInstance)
-    {
-        if (27 === e.keyCode /*ESC*/) hideOverlay();
-        else if (37 === e.keyCode /*LEFT*/) activeInstance.showPrevious();
-        else if (39 === e.keyCode /*RIGHT*/) activeInstance.showNext();
-    }
-}
 function setup()
 {
     if (!overlay)
@@ -133,7 +124,6 @@ function showOverlay(instance)
     overlayVisible = true;
     activeInstance = instance;
     document.body.appendChild(show(overlay));
-    addEvent(window, 'keydown', keyListener, {passive:true, capture:false});
     setTimeout(function() {addClass(overlay, 'tt-visible');}, 60);
 }
 function hideOverlay()
@@ -141,7 +131,6 @@ function hideOverlay()
     if (!overlayVisible) return false;
     overlayVisible = false;
     activeInstance = null;
-    removeEvent(window, 'keydown', keyListener, {passive:true, capture:false});
     removeClass(hide(overlay), 'tt-visible');
     setTimeout(function() {overlay.textContent = '';}, 0);
 }
@@ -226,11 +215,12 @@ function touchTouch(items, options)
     if (!(self instanceof touchTouch)) return new touchTouch(items, options);
 
     /* Private variables */
-    var slider, prevArrow, nextArrow, placeholders,
-        touchStart, touchMove, touchEnd, wheelTurn,
+    var slider, prevArrow, nextArrow, caption, placeholders,
+        touchStart, touchMove, touchEnd, wheelTurn, keyPress,
         prevClick, nextClick, itemClick, onResize,
-        showImage, preload, removeExtraHandlers,
-        index = 0, auto = false, fitscale = 0;
+        showImage, preload, removeExtraHandlers, transform,
+        auto = false, fitscale = 0,
+        index = 0, tX = 0, tY = 0, sX = 1;
 
     items = Array.prototype.slice.call(items || []);
     options = options || {};
@@ -280,6 +270,21 @@ function touchTouch(items, options)
         touchMove = null;
         touchEnd = null;
     };
+    transform = function(img) {
+        if (img)
+        {
+            var t = translation(img), s = scaling(img);
+            tX = t[0];
+            tY = t[1];
+            sX = null != s[0] ? s[0] : 1;
+        }
+        else
+        {
+            tX = 0;
+            tY = 0;
+            sX = 1;
+        }
+    };
 
     auto = !!options.auto;
     fitscale = options.fit;
@@ -299,6 +304,12 @@ function touchTouch(items, options)
 
     nextArrow = addClass(document.createElement('a'), 'tt-next-arrow');
     if (options.nextArrow) addClass(nextArrow, options.nextArrow);
+
+    if (options.showCaption)
+    {
+        caption = addClass(document.createElement('div'), 'tt-caption');
+        if (options.caption) addClass(caption, options.caption);
+    }
 
     placeholders = items.map(function(item) {
         var placeholder;
@@ -325,8 +336,7 @@ function touchTouch(items, options)
                     ] : [
                         e.pageX, e.pageY
                     ],
-                    img = el, t = translation(img), s = scaling(img),
-                    tX = t[0], tY = t[1], sX = null != s[0] ? s[0] : 1;
+                    img = el;
 
                 addEvent(slider, isTouch ? 'touchmove' : 'mousemove', touchMove = function(e) {
                     e.preventDefault && e.preventDefault();
@@ -447,15 +457,104 @@ function touchTouch(items, options)
         if (('img' === e.target.tagName.toLowerCase()) && (e.ctrlKey || e.metaKey))
         {
             e.preventDefault && e.preventDefault();
-            var img = e.target, s = scaling(img), sX = null != s[0] ? s[0] : 1;
+            var img = e.target;
             sX = clamp(sX - e.deltaY * 1e-3, 1, 3);
             if (stdMath.abs(sX - 1) < 1e-2)
             {
-                reset(img, 0, 0, sX = 1);
+                reset(img, tX = 0, tY = 0, sX = 1);
             }
             else
             {
                 scale(img, sX);
+            }
+        }
+    }, {passive:false, capture:false});
+
+    addEvent(window, 'keydown', keyPress = function(e) {
+        if (activeInstance === self)
+        {
+            var img = index >=0 && index < items.length ? placeholders[index].children[0] : null;
+            if (27 === e.keyCode /*ESC*/)
+            {
+                self.hideGallery();
+            }
+            else if ((38 === e.keyCode) /*UP*/ && (e.ctrlKey || e.metaKey) /*CTRL|META*/)
+            {
+                if (img && (sX > 1))
+                {
+                    e.preventDefault && e.preventDefault();
+                    tY -= 10;
+                    translate(img, tX, tY);
+                }
+            }
+            else if ((40 === e.keyCode) /*DOWN*/ && (e.ctrlKey || e.metaKey) /*CTRL|META*/)
+            {
+                if (img && (sX > 1))
+                {
+                    e.preventDefault && e.preventDefault();
+                    tY += 10;
+                    translate(img, tX, tY);
+                }
+            }
+            else if ((37 === e.keyCode) /*LEFT*/ && (e.ctrlKey || e.metaKey) /*CTRL|META*/)
+            {
+                if (img && (sX > 1))
+                {
+                    e.preventDefault && e.preventDefault();
+                    tX -= 10;
+                    translate(img, tX, tY);
+                }
+            }
+            else if ((39 === e.keyCode) /*RIGHT*/ && (e.ctrlKey || e.metaKey) /*CTRL|META*/)
+            {
+                if (img && (sX > 1))
+                {
+                    e.preventDefault && e.preventDefault();
+                    tX += 10;
+                    translate(img, tX, tY);
+                }
+            }
+            else if ((38 === e.keyCode) /*UP*/)
+            {
+                if (img)
+                {
+                    e.preventDefault && e.preventDefault();
+                    sX = clamp(sX + 0.2, 1, 3);
+                    if (stdMath.abs(sX - 1) < 1e-2)
+                    {
+                        reset(img, tX = 0, tY = 0, sX = 1);
+                    }
+                    else
+                    {
+                        scale(img, sX);
+                    }
+                }
+            }
+            else if ((40 === e.keyCode) /*DOWN*/)
+            {
+                if (img)
+                {
+                    e.preventDefault && e.preventDefault();
+                    sX = clamp(sX - 0.2, 1, 3);
+                    if (stdMath.abs(sX - 1) < 1e-2)
+                    {
+                        reset(img, tX = 0, tY = 0, sX = 1);
+                    }
+                    else
+                    {
+                        scale(img, sX);
+                    }
+                }
+            }
+            else if (37 === e.keyCode /*LEFT*/)
+            {
+                e.preventDefault && e.preventDefault();
+                self.showPrevious();
+            }
+            else if (39 === e.keyCode /*RIGHT*/)
+            {
+                e.preventDefault && e.preventDefault();
+                self.showNext();
             }
         }
     }, {passive:false, capture:false});
@@ -492,8 +591,11 @@ function touchTouch(items, options)
             overlay.appendChild(slider);
             overlay.appendChild(prevArrow);
             overlay.appendChild(nextArrow);
+            if (caption) overlay.appendChild(caption);
+            if (items.length) transform(placeholders[index].children[0]);
             // Move the slider to the correct image
             offsetSlider(slider, index);
+            if (caption && items.length) caption.textContent = String(index + 1) + '/' + String(items.length);
             showOverlay(self);
             showImage(index);
             // Preload the next image
@@ -521,7 +623,9 @@ function touchTouch(items, options)
             var img = placeholders[index].children[0];
             setTimeout(function() {reset(img);}, 40);
             ++index;
+            transform(placeholders[index].children[0]);
             offsetSlider(slider, index);
+            if (caption && items.length) caption.textContent = String(index + 1) + '/' + String(items.length);
             preload(index + 1);
         }
         else
@@ -540,7 +644,9 @@ function touchTouch(items, options)
             var img = placeholders[index].children[0];
             setTimeout(function() {reset(img);}, 40);
             --index;
+            transform(placeholders[index].children[0]);
             offsetSlider(slider, index);
+            if (caption && items.length) caption.textContent = String(index + 1) + '/' + String(items.length);
             preload(index - 1);
         }
         else
@@ -557,6 +663,7 @@ function touchTouch(items, options)
             removeExtraHandlers();
             if (activeInstance === self) hideOverlay();
             if (onResize) removeEvent(window, 'resize', onResize, {passive:true, capture:false});
+            removeEvent(window, 'keydown', keyPress, {passive:false, capture:false});
             removeEvent(slider, 'touchstart', touchStart, {passive:false, capture:false});
             removeEvent(slider, 'mousedown', touchStart, {passive:false, capture:false});
             removeEvent(slider, 'wheel', wheelTurn, {passive:false, capture:false});
@@ -564,8 +671,9 @@ function touchTouch(items, options)
             removeEvent(nextArrow, 'click', nextClick, {passive:false, capture:false});
             if (itemClick) items.forEach(function(item, i) {removeEvent(item, 'click', itemClick[i], {passive:false, capture:false});});
             onResize = null;
-            touchMove = null;
+            keyPress = null;
             touchStart = null;
+            touchMove = null;
             touchEnd = null;
             wheelTurn = null;
             prevClick = null;
@@ -575,9 +683,11 @@ function touchTouch(items, options)
             slider = null;
             prevArrow = null;
             nextArrow = null;
+            caption = null;
             placeholders = null;
             items = null;
             options = null;
+            index = -1;
             self.showGallery = noop;
             self.hideGallery = noop;
             self.showNext = noop;

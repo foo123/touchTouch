@@ -81,11 +81,12 @@ ul {
 
 <ul>
 <li><b>Supported Actions:</b></li>
-<li>Keyboard Navigation: ESC (close), LEFT (prev image), RIGHT (next image)</li>
-<li>Mouse Navigation: CLICK BACKGROUND (close), CLICK LEFT ARROW (prev image), CLICK RIGHT ARROW (next image), SWIPE RIGHT (prev image), SWIPE LEFT (next image)</li>
-<li>Touch Navigation: TAP BACKGROUND (close), SWIPE RIGHT (prev image), SWIPE LEFT (next image)</li>
-<li>Mouse Gestures: WHEEL + CTRL (scale up/down image), CTRL + MOVE (move scaled image)</li>
-<li>Touch Gestures: TWO-FINGER PINCH (scale up/down image), TWO-FINGER MOVE (move scaled image)</li>
+<li><b>Keyboard Navigation</b>: ESC (close), LEFT (prev image), RIGHT (next image)</li>
+<li><b>Mouse Navigation</b>: CLICK BACKGROUND (close), CLICK LEFT ARROW (prev image), CLICK RIGHT ARROW (next image), SWIPE RIGHT (prev image), SWIPE LEFT (next image)</li>
+<li><b>Touch Navigation</b>: TAP BACKGROUND (close), SWIPE RIGHT (prev image), SWIPE LEFT (next image)</li>
+<li><b>Keyboard Gestures</b>: UP/DOWN (scale up/down image), CTRL + UP/DOWN/LEFT/RIGHT (move scaled image)</li>
+<li><b>Mouse Gestures</b>: WHEEL + CTRL (scale up/down image), CTRL + MOVE (move scaled image)</li>
+<li><b>Touch Gestures</b>: TWO-FINGER PINCH (scale up/down image), TWO-FINGER MOVE (move scaled image)</li>
 </ul>
 
 <div id="gallery1" class="photos">
@@ -113,7 +114,7 @@ ul {
 <script src="../src/touchTouch.js"></script>
 <script>
 // multiple instances
-touchTouch(document.getElementById('gallery1').querySelectorAll('.magnifier'));
+touchTouch(document.getElementById('gallery1').querySelectorAll('.magnifier'), {showCaption:true});
 touchTouch(document.getElementById('gallery2').querySelectorAll('.magnifier'), {fit:0.7});
 const t = touchTouch([{href:"./imgs/1.jpg"},{href:"./imgs/2.jpg"},{href:"./imgs/4.jpg"},{href:"./imgs/3.jpg"}], {auto:true,fit:0.8});
 document.getElementById('gallery3').addEventListener('click', () => t.showGallery(), false);
