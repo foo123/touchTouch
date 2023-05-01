@@ -2,17 +2,47 @@
 
 Enhanced Vanilla JavaScript version of [touchTouch Optimized Mobile Gallery](https://github.com/tutorialzine/touchTouch) by Martin Angelov
 
-**version: 1.4.0** (7.9 kB minified)
+**version: 1.5.0** (8 kB minified)
+
 
 **MIT License**
 
+
+**API:** (see `test/demo.html`)
+
+```html
+<div id="gallery">
+<a class="magnifier" href="./imgs/1.jpg"><img src="./imgs/thumbs/1.jpg" /></a>
+<a class="magnifier" href="./imgs/2.jpg"><img src="./imgs/thumbs/2.jpg" /></a>
+<a class="magnifier" href="./imgs/3.jpg"><img src="./imgs/thumbs/3.jpg" /></a>
+</div>
+```
+```javascript
+const slideshow = touchTouch(document.getElementById('gallery').querySelectorAll('.magnifier'), options);
+slideshow.showGallery(); // show gallery programmatically
+slideshow.hideGallery(); // hide gallery programmatically
+slideshow.showNext(); // navigate to next image programmatically
+slideshow.showPrevious(); // navigate to previous image programmatically
+slideshow.dispose(); // dispose the slideshow instance
+```
+
+**Supported Options:**
+
+* `slider` custom css class for gallery slider
+* `prevArrow` custom css class for previous button
+* `nextArrow` custom css class for next button
+* `swipe` duration in `ms` for swipe animation (**default** `400`)
+* `fit` scale factor in `[0, 1]` (relative to viewport dimensions) to fit image dimensions to current viewport (**default** `0` disabled)
+* `auto` boolean flag indicating that passed images are the hrefs of the gallery images themselves, instead of clickable elements (**default** `false`)
+
+
 **Supported Actions:**
 
-* Keyboard Navigation: ESC (close), LEFT (prev image), RIGHT (next image)
-* Mouse Navigation: CLICK BACKGROUND (close), CLICK LEFT ARROW (prev image), CLICK RIGHT ARROW (next image), SWIPE RIGHT (prev image), SWIPE LEFT (next image)
-* Touch Navigation: TAP BACKGROUND (close), SWIPE RIGHT (prev image), SWIPE LEFT (next image)
-* Mouse Gestures: WHEEL + CTRL (scale up/down image), CTRL + MOVE (move scaled image)
-* Touch Gestures: TWO-FINGER PINCH (scale up/down image), TWO-FINGER MOVE (move scaled image)
+* **Keyboard Navigation**: ESC (close), LEFT (previous image), RIGHT (next image)
+* **Mouse Navigation**: CLICK BACKGROUND (close), CLICK LEFT ARROW (previous image), CLICK RIGHT ARROW (next image), SWIPE RIGHT (previous image), SWIPE LEFT (next image)
+* **Touch Navigation**: TAP BACKGROUND (close), SWIPE RIGHT (previous image), SWIPE LEFT (next image)
+* **Mouse Gestures**: CTRL/META + WHEEL (scale up/down image), CTRL/META + MOVE (move scaled image)
+* **Touch Gestures**: TWO-FINGER PINCH (scale up/down image), TWO-FINGER MOVE (move scaled image)
 
 
 **see also:**

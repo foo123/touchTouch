@@ -1,5 +1,4 @@
-/* The gallery overlay */
-#galleryOverlay {
+.tt-gallery-overlay {
     position: fixed;
     display: none;
     width: 100%;
@@ -12,15 +11,14 @@
     background-color: #222;
     background-color: rgba(0,0,0,0.8);
     overflow: hidden;
-    -moz-transition: opacity 1s ease;
-    -webkit-transition: opacity 1s ease;
-    transition: opacity 1s ease;
+    -moz-transition: opacity .8s ease;
+    -webkit-transition: opacity .8s ease;
+    transition: opacity .8s ease;
 }
-/* This class will trigger the animation */
-#galleryOverlay.visible {
+.tt-gallery-overlay.tt-visible {
     opacity: 1;
 }
-.gallery-slider {
+.tt-gallery-slider {
     position: absolute;
     display: block;
     width: 100%;
@@ -33,21 +31,27 @@
     left: 0;
     z-index: 1;
     white-space: nowrap;
-    -moz-transition: left 0.4s ease;
-    -webkit-transition: left 0.4s ease;
-    transition: left 0.4s ease;
+    -moz-transition-property: left;
+    -moz-transition-duration: 0.4s;
+    -moz-transition-timing-function: ease;
+    -webkit-transition-property: left;
+    -webkit-transition-duration: 0.4s;
+    -webkit-transition-timing-function: ease;
+    transition-property: left;
+    transition-duration: 0.4s;
+    transition-timing-function: ease;
 }
-.gallery-slider.rightSpring {
-    -moz-animation: rightSpring 0.3s;
-    -webkit-animation: rightSpring 0.3s;
-    animation: rightSpring 0.3s;
+.tt-gallery-slider.tt-right-spring {
+    -moz-animation: tt-right-spring 0.3s;
+    -webkit-animation: tt-right-spring 0.3s;
+    animation: tt-right-spring 0.3s;
 }
-.gallery-slider.leftSpring {
-    -moz-animation: leftSpring 0.3s;
-    -webkit-animation: leftSpring 0.3s;
-    animation: leftSpring 0.3s;
+.tt-gallery-slider.tt-left-spring {
+    -moz-animation: tt-left-spring 0.3s;
+    -webkit-animation: tt-left-spring 0.3s;
+    animation: tt-left-spring 0.3s;
 }
-.gallery-slider .placeholder {
+.tt-gallery-slider .tt-placeholder {
     width: 100%;
     height: 100%;
     display: inline-block;
@@ -60,12 +64,10 @@
     background-repeat: no-repeat;
     background-position: center center;
 }
-.gallery-slider .placeholder.loaded {
+.tt-gallery-slider .tt-placeholder.tt-img {
     background-image: none;
 }
-/* The before element moves the
-* image halfway from the top */
-.gallery-slider .placeholder:before {
+.tt-gallery-slider .tt-placeholder::before {
     position: relative;
     display: inline-block;
     content: "";
@@ -76,101 +78,80 @@
     margin: 0;
     margin-right: -1px;
 }
-.gallery-slider .placeholder img {
+.tt-gallery-slider .tt-placeholder img {
     display: inline-block;
     vertical-align: middle;
     width: auto;
     height: auto;
 }
-/* Arrows */
-#galleryOverlay .prev-arrow,
-#galleryOverlay .next-arrow {
-    border: none;
+.tt-gallery-overlay .tt-prev-arrow,
+.tt-gallery-overlay .tt-next-arrow {
+    position: absolute;
+    display: inline-block;
+    width: 43px;
+    height: 80px;
+    top: 50%;
+    margin-top: -29px;
+    z-index: 5;
+    border: 3px solid white;
     text-decoration: none;
+    cursor: pointer;
+    opacity: 0.5;
     background-color: transparent;
     background-image: url('./arrows.png');
     background-repeat: no-repeat;
-    opacity: 0.5;
-    cursor: pointer;
-    position: absolute;
-    width: 43px;
-    height: 58px;
-    top: 50%;
-    z-index: 2;
-    margin-top: -29px;
-    -moz-transition: opacity 0.2s ease;
-    -webkit-transition: opacity 0.2s ease;
-    transition: opacity 0.2s ease;
+    -moz-transition: opacity .2s ease;
+    -webkit-transition: opacity .2s ease;
+    transition: opacity .2s ease;
 }
-#galleryOverlay .prev-arrow:hover,
-#galleryOverlay .next-arrow:hover {
+.tt-gallery-overlay .tt-prev-arrow:hover,
+.tt-gallery-overlay .tt-next-arrow:hover {
     opacity: 1;
 }
-#galleryOverlay .prev-arrow {
-    height: 80px;
-    border: 3px solid white;
+.tt-gallery-overlay .tt-prev-arrow {
     background-position: left top;
     left: 10%;
 }
-#galleryOverlay .next-arrow {
-    height: 80px;
-    border: 3px solid white;
+.tt-gallery-overlay .tt-next-arrow {
     background-position: right top;
     right: 10%;
 }
-
-/* Safari and Chrome Keyframe Animations */
-@-webkit-keyframes rightSpring {
+@-webkit-keyframes tt-right-spring {
     0% {        margin-left: 0px;}
     50% {   margin-left: -30px;}
     100% {  margin-left: 0px;}
 }
-@-webkit-keyframes leftSpring {
+@keyframes tt-right-spring {
+    0% {        margin-left: 0px;}
+    50% {   margin-left: -30px;}
+    100% {  margin-left: 0px;}
+}
+@-webkit-keyframes tt-left-spring {
     0% {        margin-left: 0px;}
     50% {   margin-left: 30px;}
     100% {  margin-left: 0px;}
 }
-@keyframes rightSpring {
-    0% {        margin-left: 0px;}
-    50% {   margin-left: -30px;}
-    100% {  margin-left: 0px;}
-}
-@keyframes leftSpring {
+@keyframes tt-left-spring {
     0% {        margin-left: 0px;}
     50% {   margin-left: 30px;}
     100% {  margin-left: 0px;}
 }
 
 @media (max-width: 1080px) {
-/* hide arrows if small enough touchscreen */
-#galleryOverlay.is-touch-screen .prev-arrow,
-#galleryOverlay.is-touch-screen .next-arrow {
+.tt-gallery-overlay.tt-touch-screen .tt-prev-arrow,
+.tt-gallery-overlay.tt-touch-screen .tt-next-arrow {
     display: none !important;
 }
 }
 @media (orientation: landscape) {
-.gallery-slider .placeholder img {
+.tt-gallery-slider .tt-placeholder img {
     max-width: none;
     max-height: 100%;
 }
 }
 @media (orientation: portrait) {
-.gallery-slider .placeholder img {
+.tt-gallery-slider .tt-placeholder img {
     max-height: none;
     max-width: 100%;
 }
 }
-/*@media (max-width: 360px) {
-.gallery-slider .placeholder img,
-.gallery-slider .placeholder img {
-    max-height: none;
-    max-width: 100%;
-}
-}
-@media (max-height: 360px) {
-.gallery-slider .placeholder img,
-.gallery-slider .placeholder img {
-    max-width: none;
-    max-height: 100%;
-}
-}*/

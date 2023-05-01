@@ -1,7 +1,7 @@
 /**
 *  touchTouch.js
 *  Enhanced Vanilla JavaScript version of https://github.com/tutorialzine/touchTouch Optimized Mobile Gallery by Martin Angelov
-*  @VERSION: 1.4.0
+*  @VERSION: 1.5.0
 *  @license: MIT License
 *
 *  https://github.com/foo123/touchTouch
@@ -19,6 +19,9 @@ var stdMath = Math,
         : function(s) {return s.replace(trim_re, '');}
 ;
 
+function noop()
+{
+}
 function num(x)
 {
     return parseFloat(x || 0) || 0;
@@ -26,6 +29,10 @@ function num(x)
 function numbers(s)
 {
     return (String(s).match(num_re) || []).map(num);
+}
+function clamp(x, xmin, xmax)
+{
+    return stdMath.min(stdMath.max(x, xmin), xmax);
 }
 function debounce(f, wait, runThis)
 {
@@ -46,13 +53,13 @@ function hasEventOptions()
     var passiveSupported = false, options = {};
     try {
         Object.defineProperty(options, 'passive', {
-            get: function(){
+            get: function() {
                 passiveSupported = true;
                 return false;
             }
         });
-        window.addEventListener('test', null, options);
-        window.removeEventListener('test', null, options);
+        window.addEventListener('test', noop, options);
+        window.removeEventListener('test', noop, options);
     } catch(e) {
         passiveSupported = false;
     }
@@ -85,15 +92,6 @@ function removeClass(el, className)
     else el.className = trim((' ' + el.className + ' ').replace(' ' + className + ' ', ' '));
     return el;
 }
-function closest(el, id)
-{
-    if (el.closest) return el.closest('#'+id);
-    while (el)
-    {
-        if (id === el.id) return el;
-        el = el.parentNode;
-    }
-}
 function hide(el)
 {
     el.style.setProperty('--touchTouchDisplay', el.style.getPropertyValue('display'));
@@ -123,52 +121,48 @@ function setup()
 {
     if (!overlay)
     {
-        // Appending the markup to the page
         overlay = document.createElement('div');
-        overlay.id = 'galleryOverlay';
-        if ('ontouchstart' in window) addClass(overlay, 'is-touch-screen');
+        addClass(overlay, 'tt-gallery-overlay');
+        if ('ontouchstart' in window) addClass(overlay, 'tt-touch-screen');
         hide(overlay);
     }
 }
 function showOverlay(instance)
 {
-    // If the overlay is already shown, exit
     if (overlayVisible) return false;
-    // Raise the visible flag
     overlayVisible = true;
     activeInstance = instance;
-    // Show the overlay
     document.body.appendChild(show(overlay));
-    // listen for esc/left/right keys
     addEvent(window, 'keydown', keyListener, {passive:true, capture:false});
-    // Trigger the opacity CSS transition
-    setTimeout(function() {addClass(overlay, 'visible');}, 60);
+    setTimeout(function() {addClass(overlay, 'tt-visible');}, 60);
 }
 function hideOverlay()
 {
-    // If the overlay is not shown, exit
     if (!overlayVisible) return false;
     overlayVisible = false;
     activeInstance = null;
-    // unlisten for esc/left/right keys
     removeEvent(window, 'keydown', keyListener, {passive:true, capture:false});
-    // Hide the overlay
-    removeClass(hide(overlay), 'visible');
+    removeClass(hide(overlay), 'tt-visible');
     setTimeout(function() {overlay.textContent = '';}, 0);
+}
+function offsetSlider(slider, index)
+{
+    // This will trigger a smooth css transition
+    slider.style.left = String(-index * 100) + '%';
 }
 function loadImage(src, callback)
 {
     var img = document.createElement('img');
     addEvent(img, 'load', function load() {
         removeEvent(img, 'load', load);
-        addClass(img, img.height > img.width ? 'is-portrait' : (img.height === img.width ? 'is-square' : 'is-landscape'));
+        addClass(img, img.height > img.width ? 'tt-portrait' : (img.height === img.width ? 'tt-square' : 'tt-landscape'));
         callback.call(img);
     });
     img.src = src;
 }
 function fit(img, scale)
 {
-    if (!img || ('img' !== (img.tagName||'').toLowerCase())) return;
+    if (!img || ('img' !== (img.tagName||'').toLowerCase())) return img;
     var w = img.width,
         h = img.height,
         ww = scale*(window.innerWidth || document.documentElement.clientWidth),
@@ -183,6 +177,47 @@ function fit(img, scale)
         img.style.width = String(ww) + 'px';
         img.style.height = 'auto';
     }
+    return img;
+}
+function reset(img, tX, tY, sX, sY)
+{
+    if (img)
+    {
+        img.style.removeProperty('margin-left');
+        img.style.removeProperty('margin-top');
+        img.style.removeProperty('transform-origin');
+        img.style.removeProperty('transform');
+    }
+    return img;
+}
+function translate(img, tX, tY)
+{
+    if (img)
+    {
+        img.style.marginLeft = String(tX) + 'px';
+        img.style.marginTop = String(tY) + 'px';
+    }
+    return img;
+}
+function scale(img, sX, sY)
+{
+    if (img)
+    {
+        img.style.transformOrigin = 'center center';
+        img.style.transform = 'scale(' + String(sX) + ',' + String(sX) + ')';
+    }
+    return img;
+}
+function translation(img)
+{
+    return [
+        numbers(img.style.getPropertyValue('margin-left') || '')[0] || 0,
+        numbers(img.style.getPropertyValue('margin-top') || '')[0] || 0
+    ];
+}
+function scaling(img)
+{
+    return numbers(img.style.getPropertyValue('transform') || '');
 }
 
 function touchTouch(items, options)
@@ -193,37 +228,39 @@ function touchTouch(items, options)
     /* Private variables */
     var slider, prevArrow, nextArrow, placeholders,
         touchStart, touchMove, touchEnd, wheelTurn,
-        prevClick, nextClick, itemClick, onResize, removeHandlers,
+        prevClick, nextClick, itemClick, onResize,
+        showImage, preload, removeExtraHandlers,
         index = 0, auto = false, fitscale = 0;
 
-    options = options || {};
-    auto = !!options.auto;
-    fitscale = options.fit;
-    setup();
-    slider = document.createElement('div');
-    prevArrow = document.createElement('a');
-    nextArrow = document.createElement('a');
-    slider.id = 'gallerySlider' + String(++id);
-    slider.style.touchAction = 'none';
-    addClass(slider, 'gallery-slider');
-    if (options.slider) addClass(slider, options.slider);
-    addClass(prevArrow, 'prev-arrow');
-    if (options.prevArrow) addClass(prevArrow, options.prevArrow);
-    addClass(nextArrow, 'next-arrow');
-    if (options.nextArrow) addClass(nextArrow, options.nextArrow);
-
     items = Array.prototype.slice.call(items || []);
+    options = options || {};
 
-    // Creating a placeholder for each image
-    placeholders = items.map(function(item, i) {
-        var placeholder;
-        placeholder = document.createElement('div');
-        addClass(placeholder, 'placeholder');
-        slider.appendChild(placeholder);
-        return placeholder;
-    });
-
-    removeHandlers = function() {
+    showImage = function showImage(index) {
+        if (index < 0 || index >= items.length) return false;
+        if (!placeholders[index].children.length)
+        {
+            loadImage(items[index].href, function() {
+                if (fitscale)
+                {
+                    fit(this, fitscale);
+                    if (!onResize)
+                    {
+                        addEvent(window, 'resize', onResize = debounce(function() {
+                            placeholders.forEach(function(p) {fit(p.children[0], fitscale);});
+                        }, 100), {passive:true, capture:false});
+                    }
+                }
+                placeholders[index].textContent = '';
+                addClass(placeholders[index], 'tt-img');
+                placeholders[index].appendChild(this);
+            });
+        }
+    };
+    preload = function preload(index)  {
+        if (index < 0 || index >= items.length) return false;
+        setTimeout(function() {showImage(index);}, 1000);
+    };
+    removeExtraHandlers = function removeExtraHandlers() {
         if (touchMove)
         {
             removeEvent(slider, touchMove.isTouch ? 'touchmove' : 'mousemove', touchMove, {passive:false, capture:false});
@@ -244,15 +281,43 @@ function touchTouch(items, options)
         touchEnd = null;
     };
 
-    // touch/click/drag/wheel event handlers
+    auto = !!options.auto;
+    fitscale = options.fit;
+
+    setup();
+
+    slider = addClass(document.createElement('div'), 'tt-gallery-slider');
+    if (options.slider) addClass(slider, options.slider);
+    slider.id = 'tt-gallery-slider-' + String(++id);
+    slider.style.setProperty('touch-action', 'none');
+    slider.style.setProperty('-moz-transition-duration', String(options.swipe || 400) + 'ms');
+    slider.style.setProperty('-webkit-transition-duration', String(options.swipe || 400) + 'ms');
+    slider.style.setProperty('transition-duration', String(options.swipe || 400) + 'ms');
+
+    prevArrow = addClass(document.createElement('a'), 'tt-prev-arrow');
+    if (options.prevArrow) addClass(prevArrow, options.prevArrow);
+
+    nextArrow = addClass(document.createElement('a'), 'tt-next-arrow');
+    if (options.nextArrow) addClass(nextArrow, options.nextArrow);
+
+    placeholders = items.map(function(item) {
+        var placeholder;
+        placeholder = document.createElement('div');
+        addClass(placeholder, 'tt-placeholder');
+        slider.appendChild(placeholder);
+        return placeholder;
+    });
+
+    // event handlers
+    // ignore superfluous touch events by debouncing
     addEvent(slider, 'touchstart', touchStart = debounce(function(e) {
         var isTouch = e.touches && e.touches.length, el = e.target;
 
         if ('img' === el.tagName.toLowerCase())
         {
-            if ((isTouch && (2 === e.touches.length) && (2 === e.targetTouches.length)) || (!isTouch && (e.ctrlKey || e.metaKey)))
+            if ((isTouch && (2 === e.touches.length)) || (!isTouch && (e.ctrlKey || e.metaKey)))
             {
-                removeHandlers();
+                removeExtraHandlers();
                 var touches = isTouch ? (e.touches[0].pageX <= e.touches[1].pageX ? [e.touches[0], e.touches[1]] : [e.touches[1], e.touches[0]]) : null,
                     start = isTouch ? [
                         touches[0].pageX, touches[0].pageY,
@@ -260,19 +325,18 @@ function touchTouch(items, options)
                     ] : [
                         e.pageX, e.pageY
                     ],
-                    start0 = start,
-                    img = el,
-                    tX = numbers(img.style.getPropertyValue('margin-left'))[0] || 0,
-                    tY = numbers(img.style.getPropertyValue('margin-top'))[0] || 0,
-                    scale = numbers(img.style.getPropertyValue('transform')),
-                    sX = scale[0] ? scale[0] : 1;
+                    img = el, t = translation(img), s = scaling(img),
+                    tX = t[0], tY = t[1], sX = null != s[0] ? s[0] : 1;
+
                 addEvent(slider, isTouch ? 'touchmove' : 'mousemove', touchMove = function(e) {
                     e.preventDefault && e.preventDefault();
 
-                    if (isTouch && ((2 !== e.touches.length) || (2 !== e.targetTouches.length))) return false;
+                    // ignore superfluous touch events
+                    if (isTouch && (2 !== e.touches.length)) return false;
 
                     var touches2 = isTouch ? [touches[0].identifier === e.touches[0].identifier ? e.touches[0] : (touches[0].identifier === e.touches[1].identifier ? e.touches[1] : null), touches[1].identifier === e.touches[0].identifier ? e.touches[0] : (touches[1].identifier === e.touches[1].identifier ? e.touches[1] : null)] : null;
 
+                    // ignore superfluous touch events
                     if (isTouch && (!touches2[0] || !touches2[1])) return false;
 
                     var end = isTouch ? [
@@ -286,8 +350,8 @@ function touchTouch(items, options)
                     {
                         ntX = tX + end[2] - start[2];
                         ntY = tY + end[3] - start[3];
-                        a = (end[2] - end[0]) / (start0[2] - start0[0]) - 1;
-                        nsX = stdMath.min(stdMath.max(sX + 0.1 * a, 1), 3);
+                        a = stdMath.hypot(end[2] - end[0], end[3] - end[1]) / stdMath.hypot(start[2] - start[0], start[3] - start[1]) - 1;
+                        nsX = clamp(sX + a * 4, 1, 3);
                     }
                     else
                     {
@@ -295,127 +359,112 @@ function touchTouch(items, options)
                         ntY = tY + end[1] - start[1];
                         nsX = sX;
                     }
-                    start = end;
                     if (stdMath.abs(nsX - 1) < 1e-2)
                     {
-                        tX = 0;
-                        tY = 0;
-                        sX = 1;
-                        img.style.removeProperty('transform-origin');
-                        img.style.removeProperty('transform');
-                        img.style.removeProperty('margin-left');
-                        img.style.removeProperty('margin-top');
+                        reset(img, tX = 0, tY = 0, sX = 1);
                     }
                     else if (!isTouch)
                     {
-                        tX = ntX;
-                        tY = ntY;
-                        img.style.marginLeft = String(tX)+'px';
-                        img.style.marginTop = String(tY)+'px';
+                        translate(img, tX = ntX, tY = ntY);
                     }
-                    else if (stdMath.abs(a) < 0.5)
+                    else if (stdMath.abs(a) < 0.08)
                     {
-                        tX = ntX;
-                        tY = ntY;
-                        img.style.marginLeft = String(tX)+'px';
-                        img.style.marginTop = String(tY)+'px';
+                        translate(img, tX = ntX, tY = ntY);
                     }
                     else
                     {
-                        sX = nsX;
-                        img.style.transformOrigin = 'center center';
-                        img.style.transform = 'scale('+sX+','+sX+')';
+                        scale(img, sX = nsX);
                     }
+                    start = end;
+
                     return false;
                 }, {passive:false, capture:false});
                 touchMove.isTouch = isTouch;
-                touchEnd = debounce(removeHandlers, 200);
+
+                touchEnd = debounce(removeExtraHandlers, 200);
                 if (isTouch)
                 {
                     addEvent(slider, 'touchend', touchEnd, {passive:true, capture:false});
                     addEvent(slider, 'touchcancel', touchEnd, {passive:true, capture:false});
-                    touchEnd.isTouch = isTouch;
                 }
                 else
                 {
                     addEvent(slider, 'mouseup', touchEnd, {passive:true, capture:false});
-                    touchEnd.isTouch = isTouch;
                 }
+                touchEnd.isTouch = isTouch;
             }
-            else if (!isTouch || ((1 === e.touches.length) && (1 === e.targetTouches.length)))
+            else if (!isTouch || (1 === e.touches.length))
             {
-                removeHandlers();
-                var startX = isTouch ? e.touches[0].pageX : e.pageX;
+                removeExtraHandlers();
+                var touch = isTouch ? e.touches[0] : null, startX = isTouch ? touch.pageX : e.pageX;
+
                 addEvent(slider, isTouch ? 'touchmove' : 'mousemove', touchMove = function(e) {
                     e.preventDefault && e.preventDefault();
 
-                    if (isTouch && ((1 !== e.touches.length) || (1 !== e.targetTouches.length))) return false;
+                    // ignore superfluous touch events
+                    if (isTouch && ((1 !== e.touches.length) || (touch.identifier !== e.touches[0].identifier))) return false;
 
                     var diff = (isTouch ? e.touches[0].pageX : e.pageX) - startX;
 
-                    if (diff > 20)
+                    if (diff > 15)
                     {
-                        removeHandlers();
                         self.showPrevious();
                     }
-                    else if (diff < -20)
+                    else if (diff < -15)
                     {
-                        removeHandlers();
                         self.showNext();
                     }
+
                     return false;
                 }, {passive:false, capture:false});
                 touchMove.isTouch = isTouch;
-                touchEnd = debounce(removeHandlers, 200);
+
+                touchEnd = debounce(removeExtraHandlers, 200);
                 if (isTouch)
                 {
                     addEvent(slider, 'touchend', touchEnd, {passive:true, capture:false});
                     addEvent(slider, 'touchcancel', touchEnd, {passive:true, capture:false});
-                    touchEnd.isTouch = isTouch;
                 }
                 else
                 {
                     addEvent(slider, 'mouseup', touchEnd, {passive:true, capture:false});
-                    touchEnd.isTouch = isTouch;
                 }
+                touchEnd.isTouch = isTouch;
             }
         }
         else if (prevArrow !== el && nextArrow !== el)
         {
-            removeHandlers();
-            setTimeout(hideOverlay, 100);
+            self.hideGallery();
         }
     }, 60, function(e) {
         e.preventDefault && e.preventDefault();
         return false;
     }), {passive:false, capture:false});
+
     addEvent(slider, 'mousedown', touchStart, {passive:false, capture:false});
+
     addEvent(slider, 'wheel', wheelTurn = function(e) {
         if (('img' === e.target.tagName.toLowerCase()) && (e.ctrlKey || e.metaKey))
         {
             e.preventDefault && e.preventDefault();
-            var img = e.target,
-                scale = numbers(img.style.getPropertyValue('transform')),
-                sX = scale[0] ? scale[0] : 1;
-            sX = stdMath.min(stdMath.max(sX - e.deltaY * 1e-3, 1), 3);
+            var img = e.target, s = scaling(img), sX = null != s[0] ? s[0] : 1;
+            sX = clamp(sX - e.deltaY * 1e-3, 1, 3);
             if (stdMath.abs(sX - 1) < 1e-2)
             {
-                sX = 1;
-                img.style.removeProperty('transform-origin');
-                img.style.removeProperty('transform');
-                img.style.removeProperty('margin');
+                reset(img, 0, 0, sX = 1);
             }
             else
             {
-                img.style.transformOrigin = 'center center';
-                img.style.transform = 'scale('+sX+','+sX+')';
+                scale(img, sX);
             }
         }
     }, {passive:false, capture:false});
+
     addEvent(prevArrow, 'click', prevClick = function(e) {
         e.preventDefault && e.preventDefault();
         self.showPrevious();
     }, {passive:false, capture:false});
+
     addEvent(nextArrow, 'click', nextClick = function(e) {
         e.preventDefault && e.preventDefault();
         self.showNext();
@@ -444,7 +493,7 @@ function touchTouch(items, options)
             overlay.appendChild(prevArrow);
             overlay.appendChild(nextArrow);
             // Move the slider to the correct image
-            offsetSlider(index);
+            offsetSlider(slider, index);
             showOverlay(self);
             showImage(index);
             // Preload the next image
@@ -452,93 +501,68 @@ function touchTouch(items, options)
             // Preload the previous
             preload(index - 1);
         }
+        return self;
     };
 
-    var offsetSlider = function offsetSlider(index) {
-        // This will trigger a smooth css transition
-        slider.style.left = String(-index * 100) + '%';
-    };
-
-    // Preload an image by its index in the items array
-    var preload = function preload(index) {
-        // If the index is outside the bonds of the array
-        if (index < 0 || index >= items.length) return false;
-        setTimeout(function() {
-            showImage(index);
-        }, 1000);
-    };
-
-    // Show image in the slider
-    var showImage = function showImage(index) {
-        // If the index is outside the bonds of the array
-        if (index < 0 || index >= items.length) return false;
-        // Call the load function with the href attribute of the item
-        if (!placeholders[index].children.length)
+    self.hideGallery = function hideGallery() {
+        if (activeInstance === self)
         {
-            loadImage(items[index].href, function() {
-                if (fitscale)
-                {
-                    fit(this, fitscale);
-                    if (!onResize)
-                    {
-                        addEvent(window, 'resize', onResize = debounce(function() {
-                            placeholders.forEach(function(p) {fit(p.children[0], fitscale);});
-                        }, 100), {passive:true, capture:false});
-                    }
-                }
-                placeholders[index].textContent = '';
-                addClass(placeholders[index], 'loaded');
-                placeholders[index].appendChild(this);
-            });
+            removeExtraHandlers();
+            hideOverlay();
         }
+        return self;
     };
 
     self.showNext = function showNext() {
-        if (activeInstance !== self) return;
-        // If this is not the last image
+        if (activeInstance !== self) return self;
+        removeExtraHandlers();
         if (index + 1 < items.length)
         {
+            var img = placeholders[index].children[0];
+            setTimeout(function() {reset(img);}, 40);
             ++index;
-            offsetSlider(index);
+            offsetSlider(slider, index);
             preload(index + 1);
         }
         else
         {
-            // Trigger the spring animation
-            addClass(slider, 'rightSpring');
-            setTimeout(function() {removeClass(slider, 'rightSpring');}, 500);
+            addClass(slider, 'tt-right-spring');
+            setTimeout(function() {removeClass(slider, 'tt-right-spring');}, 500);
         }
+        return self;
     };
 
     self.showPrevious = function showPrevious() {
-        if (activeInstance !== self) return;
-        // If this is not the first image
+        if (activeInstance !== self) return self;
+        removeExtraHandlers();
         if (index > 0)
         {
+            var img = placeholders[index].children[0];
+            setTimeout(function() {reset(img);}, 40);
             --index;
-            offsetSlider(index);
+            offsetSlider(slider, index);
             preload(index - 1);
         }
         else
         {
-            // Trigger the spring animation
-            addClass(slider, 'leftSpring');
-            setTimeout(function() {removeClass(slider, 'leftSpring');}, 500);
+            addClass(slider, 'tt-left-spring');
+            setTimeout(function() {removeClass(slider, 'tt-left-spring');}, 500);
         }
+        return self;
     };
 
     self.dispose = function() {
         if (slider)
         {
+            removeExtraHandlers();
             if (activeInstance === self) hideOverlay();
             if (onResize) removeEvent(window, 'resize', onResize, {passive:true, capture:false});
-            removeHandlers();
             removeEvent(slider, 'touchstart', touchStart, {passive:false, capture:false});
             removeEvent(slider, 'mousedown', touchStart, {passive:false, capture:false});
             removeEvent(slider, 'wheel', wheelTurn, {passive:false, capture:false});
             removeEvent(prevArrow, 'click', prevClick, {passive:false, capture:false});
             removeEvent(nextArrow, 'click', nextClick, {passive:false, capture:false});
-            if (!auto) items.forEach(function(item, i) {removeEvent(item, 'click', itemClick[i], {passive:false, capture:false});});
+            if (itemClick) items.forEach(function(item, i) {removeEvent(item, 'click', itemClick[i], {passive:false, capture:false});});
             onResize = null;
             touchMove = null;
             touchStart = null;
@@ -554,19 +578,21 @@ function touchTouch(items, options)
             placeholders = null;
             items = null;
             options = null;
-            self.showGallery = null;
-            self.showNext = null;
-            self.showPrevious = null;
+            self.showGallery = noop;
+            self.hideGallery = noop;
+            self.showNext = noop;
+            self.showPrevious = noop;
         }
     };
 }
-touchTouch.VERSION = '1.4.0';
+touchTouch.VERSION = '1.5.0';
 touchTouch.prototype = {
     constructor: touchTouch,
-    dispose: null,
-    showGallery: null,
-    showNext: null,
-    showPrevious: null
+    dispose: noop,
+    showGallery: noop,
+    hideGallery: noop,
+    showNext: noop,
+    showPrevious: noop
 };
 // export it
 window.touchTouch = touchTouch;
