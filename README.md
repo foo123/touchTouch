@@ -9,6 +9,9 @@ Enhanced Vanilla JavaScript version of [touchTouch Optimized Mobile Gallery](htt
 **version: 1.5.0** (9 kB minified)
 
 
+[Live Demo](https://foo123.github.io/examples/touchtouch/)
+
+
 **MIT License**
 
 
