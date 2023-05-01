@@ -220,6 +220,8 @@ function touchTouch(items, options)
         prevClick, nextClick, itemClick, onResize,
         showImage, preload, removeExtraHandlers, transform,
         auto = false, fitscale = 0,
+        factor = 4, threshold = 0.08,
+        move_m = 15, move_d = 15,
         index = 0, tX = 0, tY = 0, sX = 1;
 
     items = Array.prototype.slice.call(items || []);
@@ -248,7 +250,7 @@ function touchTouch(items, options)
     };
     preload = function preload(index)  {
         if (index < 0 || index >= items.length) return false;
-        setTimeout(function() {showImage(index);}, 1000);
+        setTimeout(function() {showImage(index);}, 200);
     };
     removeExtraHandlers = function removeExtraHandlers() {
         if (touchMove)
@@ -288,6 +290,10 @@ function touchTouch(items, options)
 
     auto = !!options.auto;
     fitscale = options.fit;
+    // undocumented options, for fine-tuning only if needed
+    if (null != options._factor) factor = +options._factor;
+    if (null != options._threshold) threshold = +options._threshold;
+    if (null != options._move) move_m = move_d = +options._move;
 
     setup();
 
@@ -361,7 +367,7 @@ function touchTouch(items, options)
                         ntX = tX + end[2] - start[2];
                         ntY = tY + end[3] - start[3];
                         a = stdMath.hypot(end[2] - end[0], end[3] - end[1]) / stdMath.hypot(start[2] - start[0], start[3] - start[1]) - 1;
-                        nsX = clamp(sX + a * 4, 1, 3);
+                        nsX = clamp(sX + a * factor, 1, 3);
                     }
                     else
                     {
@@ -377,7 +383,7 @@ function touchTouch(items, options)
                     {
                         translate(img, tX = ntX, tY = ntY);
                     }
-                    else if (stdMath.abs(a) < 0.08)
+                    else if (stdMath.abs(a) < threshold)
                     {
                         translate(img, tX = ntX, tY = ntY);
                     }
@@ -414,13 +420,13 @@ function touchTouch(items, options)
                     // ignore superfluous touch events
                     if (isTouch && ((1 !== e.touches.length) || (touch.identifier !== e.touches[0].identifier))) return false;
 
-                    var diff = (isTouch ? e.touches[0].pageX : e.pageX) - startX;
+                    var diff = (isTouch ? e.touches[0].pageX : e.pageX) - startX, threshold = isTouch ? move_m : move_d;
 
-                    if (diff > 15)
+                    if (diff > threshold)
                     {
                         self.showPrevious();
                     }
-                    else if (diff < -15)
+                    else if (diff < -threshold)
                     {
                         self.showNext();
                     }
@@ -470,7 +476,7 @@ function touchTouch(items, options)
         }
     }, {passive:false, capture:false});
 
-    addEvent(window, 'keydown', keyPress = function(e) {
+    keyPress = function(e) {
         if (activeInstance === self)
         {
             var img = index >=0 && index < items.length ? placeholders[index].children[0] : null;
@@ -557,7 +563,7 @@ function touchTouch(items, options)
                 self.showNext();
             }
         }
-    }, {passive:false, capture:false});
+    };
 
     addEvent(prevArrow, 'click', prevClick = function(e) {
         e.preventDefault && e.preventDefault();
@@ -597,6 +603,7 @@ function touchTouch(items, options)
             offsetSlider(slider, index);
             if (caption && items.length) caption.textContent = String(index + 1) + '/' + String(items.length);
             showOverlay(self);
+            addEvent(window, 'keydown', keyPress, {passive:false, capture:false});
             showImage(index);
             // Preload the next image
             preload(index + 1);
@@ -610,6 +617,7 @@ function touchTouch(items, options)
         if (activeInstance === self)
         {
             removeExtraHandlers();
+            removeEvent(window, 'keydown', keyPress, {passive:false, capture:false});
             hideOverlay();
         }
         return self;
@@ -661,7 +669,6 @@ function touchTouch(items, options)
         if (slider)
         {
             removeExtraHandlers();
-            if (activeInstance === self) hideOverlay();
             if (onResize) removeEvent(window, 'resize', onResize, {passive:true, capture:false});
             removeEvent(window, 'keydown', keyPress, {passive:false, capture:false});
             removeEvent(slider, 'touchstart', touchStart, {passive:false, capture:false});
@@ -670,6 +677,7 @@ function touchTouch(items, options)
             removeEvent(prevArrow, 'click', prevClick, {passive:false, capture:false});
             removeEvent(nextArrow, 'click', nextClick, {passive:false, capture:false});
             if (itemClick) items.forEach(function(item, i) {removeEvent(item, 'click', itemClick[i], {passive:false, capture:false});});
+            if (activeInstance === self) hideOverlay();
             onResize = null;
             keyPress = null;
             touchStart = null;

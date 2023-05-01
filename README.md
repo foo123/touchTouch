@@ -2,6 +2,10 @@
 
 Enhanced Vanilla JavaScript version of [touchTouch Optimized Mobile Gallery](https://github.com/tutorialzine/touchTouch) by Martin Angelov
 
+
+![touchTouch Optimized Mobile Gallery](/touchtouch.jpg)
+
+
 **version: 1.5.0** (9 kB minified)
 
 
