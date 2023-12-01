@@ -6,7 +6,7 @@ Enhanced Vanilla JavaScript version of [touchTouch Optimized Mobile Gallery](htt
 ![touchTouch Optimized Mobile Gallery](/touchtouch.jpg)
 
 
-**version: 1.5.0** (9 kB minified)
+**version: 1.5.1** (9 kB minified)
 
 
 [Live Demo](https://foo123.github.io/examples/touchtouch/)
@@ -42,6 +42,7 @@ slideshow.dispose(); // dispose the slideshow instance
 * `caption` custom css class for caption
 * `swipe` duration in `ms` for swipe animation (**default** `400`)
 * `fit` scale factor in `[0, 1]` (relative to viewport dimensions) to fit image dimensions to current viewport (**default** `0` disabled)
+* `fitsize` max size for fit to take place (**default** `Infinity` disabled)
 * `auto` boolean flag indicating that passed images are the hrefs of the gallery images themselves, instead of clickable elements (**default** `false`)
 
 

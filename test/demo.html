@@ -116,7 +116,7 @@ ul {
 // multiple instances
 touchTouch(document.getElementById('gallery1').querySelectorAll('.magnifier'), {showCaption:true});
 touchTouch(document.getElementById('gallery2').querySelectorAll('.magnifier'), {fit:0.7});
-const t = touchTouch([{href:"./imgs/1.jpg"},{href:"./imgs/2.jpg"},{href:"./imgs/4.jpg"},{href:"./imgs/3.jpg"}], {auto:true,fit:0.8});
+const t = touchTouch([{href:"./imgs/1.jpg"},{href:"./imgs/2.jpg"},{href:"./imgs/4.jpg"},{href:"./imgs/3.jpg"}], {auto:true,fit:0.8,fitsize:600});
 document.getElementById('gallery3').addEventListener('click', () => t.showGallery(), false);
 </script>
 </body>

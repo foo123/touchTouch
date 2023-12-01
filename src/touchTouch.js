@@ -1,7 +1,7 @@
 /**
 *  touchTouch.js
 *  Enhanced Vanilla JavaScript version of https://github.com/tutorialzine/touchTouch Optimized Mobile Gallery by Martin Angelov
-*  @VERSION: 1.5.0
+*  @VERSION: 1.5.1
 *  @license: MIT License
 *
 *  https://github.com/foo123/touchTouch
@@ -149,21 +149,21 @@ function loadImage(src, callback)
     });
     img.src = src;
 }
-function fit(img, scale)
+function fit(img, scale, max)
 {
     if (!img || ('img' !== (img.tagName||'').toLowerCase())) return img;
     var w = img.width,
         h = img.height,
-        ww = scale*(window.innerWidth || document.documentElement.clientWidth),
-        wh = scale*(window.innerHeight || document.documentElement.clientHeight);
-    if (h * ww / w > wh)
+        ww = (window.innerWidth || document.documentElement.clientWidth),
+        wh = (window.innerHeight || document.documentElement.clientHeight);
+    if (h * ww > w * wh)
     {
-        img.style.height = String(wh) + 'px';
+        img.style.height = String(scale*stdMath.min(max, wh)) + 'px';
         img.style.width = 'auto';
     }
     else
     {
-        img.style.width = String(ww) + 'px';
+        img.style.width = String(scale*stdMath.min(max, ww)) + 'px';
         img.style.height = 'auto';
     }
     return img;
@@ -219,7 +219,7 @@ function touchTouch(items, options)
         touchStart, touchMove, touchEnd, wheelTurn, keyPress,
         prevClick, nextClick, itemClick, onResize,
         showImage, preload, removeExtraHandlers, transform,
-        auto = false, fitscale = 0,
+        auto = false, fitscale = 0, fitsize = Infinity,
         factor = 4, threshold = 0.08,
         move_m = 15, move_d = 15,
         index = 0, tX = 0, tY = 0, sX = 1;
@@ -234,11 +234,11 @@ function touchTouch(items, options)
             loadImage(items[index].href, function() {
                 if (fitscale)
                 {
-                    fit(this, fitscale);
+                    fit(this, fitscale, fitsize);
                     if (!onResize)
                     {
                         addEvent(window, 'resize', onResize = debounce(function() {
-                            placeholders.forEach(function(p) {fit(p.children[0], fitscale);});
+                            placeholders.forEach(function(p) {fit(p.children[0], fitscale, fitsize);});
                         }, 100), {passive:true, capture:false});
                     }
                 }
@@ -290,6 +290,7 @@ function touchTouch(items, options)
 
     auto = !!options.auto;
     fitscale = options.fit;
+    fitsize = null != options.fitsize ? (+options.fitsize) : Infinity;
     // undocumented options, for fine-tuning only if needed
     if (null != options._factor) factor = +options._factor;
     if (null != options._threshold) threshold = +options._threshold;
@@ -703,7 +704,7 @@ function touchTouch(items, options)
         }
     };
 }
-touchTouch.VERSION = '1.5.0';
+touchTouch.VERSION = '1.5.1';
 touchTouch.prototype = {
     constructor: touchTouch,
     dispose: noop,
