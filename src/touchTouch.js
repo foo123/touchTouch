@@ -1,7 +1,7 @@
 /**
 *  touchTouch.js
 *  Enhanced Vanilla JavaScript version of https://github.com/tutorialzine/touchTouch Optimized Mobile Gallery by Martin Angelov
-*  @VERSION: 1.5.1
+*  @VERSION: 1.5.2
 *  @license: MIT License
 *
 *  https://github.com/foo123/touchTouch
@@ -215,10 +215,10 @@ function touchTouch(items, options)
     if (!(self instanceof touchTouch)) return new touchTouch(items, options);
 
     /* Private variables */
-    var slider, prevArrow, nextArrow, caption, placeholders,
+    var slider, prevArrow, nextArrow, caption, customCaption = false, placeholders,
         touchStart, touchMove, touchEnd, wheelTurn, keyPress,
         prevClick, nextClick, itemClick, onResize,
-        showImage, preload, removeExtraHandlers, transform,
+        showImage, preload, removeExtraHandlers, showCaption, transform,
         auto = false, fitscale = 0, fitsize = Infinity,
         factor = 4, threshold = 0.08,
         move_m = 15, move_d = 15,
@@ -247,6 +247,17 @@ function touchTouch(items, options)
                 placeholders[index].appendChild(this);
             });
         }
+    };
+    showCaption = function(index) {
+         if (caption && items && items.length)
+         {
+             var item = items[index], text = String(index + 1) + '/' + String(items.length);
+             if (customCaption)
+             {
+                text = (item.hasAttribute ? (item.hasAttribute('data-caption') ? item.getAttribute('data-caption') : (item.hasAttribute('title') ? item.getAttribute('title') : text)) : items[index].caption) || text;
+             }
+             caption.textContent = text;
+         }
     };
     preload = function preload(index)  {
         if (index < 0 || index >= items.length) return false;
@@ -316,6 +327,7 @@ function touchTouch(items, options)
     {
         caption = addClass(document.createElement('div'), 'tt-caption');
         if (options.caption) addClass(caption, options.caption);
+        customCaption = !!options.customCaption;
     }
 
     placeholders = items.map(function(item) {
@@ -602,7 +614,7 @@ function touchTouch(items, options)
             if (items.length) transform(placeholders[index].children[0]);
             // Move the slider to the correct image
             offsetSlider(slider, index);
-            if (caption && items.length) caption.textContent = String(index + 1) + '/' + String(items.length);
+            showCaption(index);
             showOverlay(self);
             addEvent(window, 'keydown', keyPress, {passive:false, capture:false});
             showImage(index);
@@ -634,7 +646,7 @@ function touchTouch(items, options)
             ++index;
             transform(placeholders[index].children[0]);
             offsetSlider(slider, index);
-            if (caption && items.length) caption.textContent = String(index + 1) + '/' + String(items.length);
+            showCaption(index);
             preload(index + 1);
         }
         else
@@ -655,7 +667,7 @@ function touchTouch(items, options)
             --index;
             transform(placeholders[index].children[0]);
             offsetSlider(slider, index);
-            if (caption && items.length) caption.textContent = String(index + 1) + '/' + String(items.length);
+            showCaption(index);
             preload(index - 1);
         }
         else
@@ -704,7 +716,7 @@ function touchTouch(items, options)
         }
     };
 }
-touchTouch.VERSION = '1.5.1';
+touchTouch.VERSION = '1.5.2';
 touchTouch.prototype = {
     constructor: touchTouch,
     dispose: noop,

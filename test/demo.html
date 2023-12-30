@@ -90,8 +90,8 @@ ul {
 </ul>
 
 <div id="gallery1" class="photos">
-    <a class="magnifier" href="./imgs/1.jpg"><img src="./imgs/thumbs/1.jpg" /></a>
-    <a class="magnifier" href="./imgs/2.jpg"><img src="./imgs/thumbs/2.jpg" /></a>
+    <a class="magnifier" href="./imgs/1.jpg" title="1st"><img src="./imgs/thumbs/1.jpg" /></a>
+    <a class="magnifier" href="./imgs/2.jpg" title="2nd"><img src="./imgs/thumbs/2.jpg" /></a>
     <a class="magnifier" href="./imgs/3.jpg"><img src="./imgs/thumbs/3.jpg" /></a>
     <a class="magnifier" href="./imgs/4.jpg"><img src="./imgs/thumbs/4.jpg" /></a>
     <a class="magnifier" href="./imgs/5.jpg"><img src="./imgs/thumbs/5.jpg" /></a>
@@ -114,7 +114,7 @@ ul {
 <script src="../src/touchTouch.js"></script>
 <script>
 // multiple instances
-touchTouch(document.getElementById('gallery1').querySelectorAll('.magnifier'), {showCaption:true});
+touchTouch(document.getElementById('gallery1').querySelectorAll('.magnifier'), {showCaption:true,customCaption:true});
 touchTouch(document.getElementById('gallery2').querySelectorAll('.magnifier'), {fit:0.7});
 const t = touchTouch([{href:"./imgs/1.jpg"},{href:"./imgs/2.jpg"},{href:"./imgs/4.jpg"},{href:"./imgs/3.jpg"}], {auto:true,fit:0.8,fitsize:600});
 document.getElementById('gallery3').addEventListener('click', () => t.showGallery(), false);
